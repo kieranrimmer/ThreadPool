@@ -4,11 +4,20 @@
 
 #include "ThreadPool.h"
 
+int test_fn(void *param) {
+    std::cout << "test_fn() receiving void pointer param: `" << (const char *) param << "`" << std::endl;
+    return 0;
+}
+
+
 int main()
 {
-    
+
+
+
     ThreadPool pool(4);
     std::vector< std::future<int> > results;
+
 
     for(int i = 0; i < 8; ++i) {
         results.emplace_back(
@@ -16,7 +25,7 @@ int main()
                 std::cout << "hello " << i << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 std::cout << "world " << i << std::endl;
-                return i*i;
+                return test_fn((void *) "weird string");
             })
         );
     }
