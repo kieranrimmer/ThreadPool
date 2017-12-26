@@ -22,7 +22,7 @@ private:
     // need to keep track of threads so we can join them
     std::vector< std::thread > workers;
     // the task queue
-    std::queue< std::function<void()> > tasks;
+    std::queue< std::function<void(void *)> > tasks;
     
     // synchronization
     std::mutex queue_mutex;
@@ -40,7 +40,7 @@ inline ThreadPool::ThreadPool(size_t threads)
             {
                 for(;;)
                 {
-                    std::function<void()> task;
+                    std::function<void(void*)> task;
 
                     {
                         std::unique_lock<std::mutex> lock(this->queue_mutex);
@@ -52,7 +52,7 @@ inline ThreadPool::ThreadPool(size_t threads)
                         this->tasks.pop();
                     }
 
-                    task();
+                    task(nullptr);
                 }
             }
         );
@@ -77,7 +77,8 @@ auto ThreadPool::enqueue(F&& f, Args&&... args)
         if(stop)
             throw std::runtime_error("enqueue on stopped ThreadPool");
 
-        tasks.emplace([task](){ (*task)(); });
+        void *arg1 = (void *) "Parameter passed in";
+        tasks.emplace([task, arg1](void* arg1){ (*task)(); });
     }
     condition.notify_one();
     return res;
